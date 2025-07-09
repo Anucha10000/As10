@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการอาคารวิจัย</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom CSS for dark green theme and Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4; /* Light green background */
+        }
+        .header-bg {
+            background-color: #047857; /* Darker green for header */
+            color: white;
+        }
+        .form-card {
+            background-color: #ecfdf5; /* Lighter green for form card */
+            border-color: #065f46;
+        }
+        .table-card {
+            background-color: #ecfdf5; /* Lighter green for table card */
+            border-color: #065f46;
+        }
+        .btn-primary-custom {
+            background-color: #065f46; /* Dark green button */
+            border-color: #065f46;
+            color: white;
+        }
+        .btn-primary-custom:hover {
+            background-color: #047857; /* Slightly lighter dark green on hover */
+            border-color: #047857;
+        }
+        .btn-outline-custom {
+            border-color: #065f46;
+            color: #065f46;
+        }
+        .btn-outline-custom:hover {
+            background-color: #065f46;
+            color: white;
+        }
+        .form-control:focus {
+            border-color: #047857;
+            box-shadow: 0 0 0 0.25rem rgba(6, 95, 70, 0.25);
+        }
+        .table thead {
+            background-color: #065f46;
+            color: white;
+        }
+        .table tbody tr:nth-child(even) {
+            background-color: #d1fae5; /* Alternate row color */
+        }
+        .rounded-lg {
+            border-radius: 0.5rem; /* Tailwind's rounded-lg */
+        }
+        .shadow-md {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Tailwind's shadow-md */
+        }
+        .container {
+            max-width: 1200px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <header class="header-bg py-4 shadow-md">
+        <div class="container mx-auto px-4">
+            <h1 class="text-3xl font-bold text-center">ระบบจัดการอาคารวิจัยฯ</h1>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Data Entry Form Section -->
+            <div class="form-card p-6 rounded-lg shadow-md border border-gray-300">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">บันทึกรายการข้อมูล</h2>
+                <form id="dataForm">
+                    <div class="mb-4">
+                        <label for="date" class="form-label text-gray-700">วันที่:</label>
+                        <input type="date" class="form-control rounded-lg" id="date" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="item" class="form-label text-gray-700">รายการ:</label>
+                        <input type="text" class="form-control rounded-lg" id="item" placeholder="เช่น ปัญหาต่างๆ" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="description" class="form-label text-gray-700">รายละเอียด:</label>
+                        <textarea class="form-control rounded-lg" id="description" rows="3" placeholder="ระบุรายละเอียดเพิ่มเติม"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="responsible" class="form-label text-gray-700">ผู้แจ้ง:</label>
+                        <input type="text" class="form-control rounded-lg" id="responsible" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="status" class="form-label text-gray-700">ความสำคัญ:</label>
+                        <select class="form-select rounded-lg" id="status" required>
+                            <option value="">เลือกความสำคัญ</option>
+                            <option value="ไม่เร่งด่วน">ไม่เร่งด่วน</option>
+                            <option value="ด่วนมาก">ด่วนมาก</option>
+                        
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary-custom w-full py-2 rounded-lg">บันทึกข้อมูล</button>
+                </form>
+            </div>
+
+            <!-- Data Display and Management Section -->
+            <div class="table-card p-6 rounded-lg shadow-md border border-gray-300">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">ข้อมูลที่บันทึกไว้</h2>
+                <div class="flex flex-wrap gap-3 mb-4">
+                    <button id="exportCsvBtn" class="btn btn-outline-custom flex-grow py-2 rounded-lg">ส่งออกเป็น CSV</button>
+                    <input type="file" id="importCsvFile" accept=".csv" class="hidden">
+                    <button id="importCsvBtn" class="btn btn-outline-custom flex-grow py-2 rounded-lg">นำเข้าจาก CSV</button>
+                    <button id="clearDataBtn" class="btn btn-outline-danger flex-grow py-2 rounded-lg">ล้างข้อมูลทั้งหมด</button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="table table-striped table-hover w-full text-sm">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="px-4 py-2 text-left">วันที่</th>
+                                <th scope="col" class="px-4 py-2 text-left">รายการ</th>
+                                <th scope="col" class="px-4 py-2 text-left">รายละเอียด</th>
+                                <th scope="col" class="px-4 py-2 text-left">ผู้รับผิดชอบ/ผู้แจ้ง</th>
+                                <th scope="col" class="px-4 py-2 text-left">สถานะ</th>
+                                <th scope="col" class="px-4 py-2 text-left">การกระทำ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                            <!-- Data rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <p id="noDataMessage" class="text-center text-gray-500 mt-4 hidden">ยังไม่มีข้อมูลในระบบ</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="header-bg py-4 mt-8 shadow-md">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2023 ระบบจัดการอาคารวิจัย. สงวนลิขสิทธิ์.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS CDN (Popper.js included) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Array to hold all data records
+        let records = [];
+
+        // Get DOM elements
+        const dataForm = document.getElementById('dataForm');
+        const dataTableBody = document.getElementById('dataTableBody');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const importCsvBtn = document.getElementById('importCsvBtn');
+        const importCsvFile = document.getElementById('importCsvFile');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const noDataMessage = document.getElementById('noDataMessage');
+
+        /**
+         * Loads data from localStorage and initializes the table.
+         */
+        function loadRecords() {
+            const storedRecords = localStorage.getItem('researchBuildingRecords');
+            if (storedRecords) {
+                records = JSON.parse(storedRecords);
+            }
+            renderTable();
+        }
+
+        /**
+         * Saves the current records array to localStorage.
+         */
+        function saveRecords() {
+            localStorage.setItem('researchBuildingRecords', JSON.stringify(records));
+        }
+
+        /**
+         * Renders the data table with the current records.
+         */
+        function renderTable() {
+            dataTableBody.innerHTML = ''; // Clear existing rows
+            if (records.length === 0) {
+                noDataMessage.classList.remove('hidden');
+                return;
+            }
+            noDataMessage.classList.add('hidden');
+
+            records.forEach((record, index) => {
+                const row = dataTableBody.insertRow();
+                row.innerHTML = `
+                    <td class="px-4 py-2">${record.date}</td>
+                    <td class="px-4 py-2">${record.item}</td>
+                    <td class="px-4 py-2">${record.description}</td>
+                    <td class="px-4 py-2">${record.responsible}</td>
+                    <td class="px-4 py-2">${record.status}</td>
+                    <td class="px-4 py-2">
+                        <button class="btn btn-sm btn-danger rounded-lg delete-btn" data-index="${index}">ลบ</button>
+                    </td>
+                `;
+            });
+
+            // Add event listeners for delete buttons
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const index = parseInt(event.target.dataset.index);
+                    deleteRecord(index);
+                });
+            });
+        }
+
+        /**
+         * Deletes a record by its index.
+         * @param {number} index - The index of the record to delete.
+         */
+        function deleteRecord(index) {
+            records.splice(index, 1); // Remove record from array
+            saveRecords(); // Save updated array to localStorage
+            renderTable(); // Re-render the table
+        }
+
+        /**
+         * Handles form submission to add a new record.
+         * @param {Event} event - The form submission event.
+         */
+        dataForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const newRecord = {
+                date: document.getElementById('date').value,
+                item: document.getElementById('item').value,
+                description: document.getElementById('description').value,
+                responsible: document.getElementById('responsible').value,
+                status: document.getElementById('status').value,
+            };
+
+            records.push(newRecord); // Add new record to array
+            saveRecords(); // Save updated array to localStorage
+            renderTable(); // Re-render the table with new data
+            dataForm.reset(); // Clear the form
+        });
+
+        /**
+         * Converts the current records array to CSV format and triggers a download.
+         */
+        exportCsvBtn.addEventListener('click', () => {
+            if (records.length === 0) {
+                alert('ไม่มีข้อมูลให้ส่งออก');
+                return;
+            }
+
+            const headers = ['วันที่', 'รายการ', 'รายละเอียด', 'ผู้รับผิดชอบ/ผู้แจ้ง', 'สถานะ'];
+            const csvRows = [];
+
+            // Add headers
+            csvRows.push(headers.join(','));
+
+            // Add data rows
+            for (const record of records) {
+                const values = [
+                    record.date,
+                    record.item,
+                    record.description,
+                    record.responsible,
+                    record.status
+                ].map(value => {
+                    // Escape commas and double quotes in string values
+                    let stringValue = String(value);
+                    if (stringValue.includes(',') || stringValue.includes('"')) {
+                        stringValue = `"${stringValue.replace(/"/g, '""')}"`;
+                    }
+                    return stringValue;
+                });
+                csvRows.push(values.join(','));
+            }
+
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'research_building_data.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // Clean up the URL object
+        });
+
+        /**
+         * Triggers the hidden file input when the "Import CSV" button is clicked.
+         */
+        importCsvBtn.addEventListener('click', () => {
+            importCsvFile.click();
+        });
+
+        /**
+         * Handles the file selection for CSV import.
+         */
+        importCsvFile.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const csvText = e.target.result;
+                    parseCsvAndLoad(csvText);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        /**
+         * Parses CSV text and updates the records array.
+         * @param {string} csvText - The CSV data as a string.
+         */
+        function parseCsvAndLoad(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            if (lines.length === 0) {
+                alert('ไฟล์ CSV ว่างเปล่า');
+                return;
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim()); // Assuming first row is header
+            const newRecords = [];
+
+            // Simple CSV parsing (consider more robust library for complex CSVs)
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values.length === headers.length) {
+                    const record = {
+                        date: values[0].trim(),
+                        item: values[1].trim(),
+                        description: values[2].trim(),
+                        responsible: values[3].trim(),
+                        status: values[4].trim(),
+                    };
+                    newRecords.push(record);
+                } else {
+                    console.warn(`Skipping malformed row: ${lines[i]}`);
+                }
+            }
+
+            // Optionally, you can choose to append or replace existing data
+            // For now, let's replace existing data with imported data
+            records = newRecords;
+            saveRecords();
+            renderTable();
+            alert('นำเข้าข้อมูลจาก CSV เรียบร้อยแล้ว');
+        }
+
+        /**
+         * Clears all data from localStorage and the table.
+         */
+        clearDataBtn.addEventListener('click', () => {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
+                records = [];
+                saveRecords();
+                renderTable();
+                alert('ข้อมูลทั้งหมดถูกล้างแล้ว');
+            }
+        });
+
+        // Load records when the page loads
+        document.addEventListener('DOMContentLoaded', loadRecords);
+    </script>
+</body>
+</html>
